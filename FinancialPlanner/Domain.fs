@@ -13,18 +13,16 @@ type Money = { Amount: decimal; Currency: Currency }
 
 type ExpectedSpending =
     { Id: SpendingId
-      CreateDate: DateTime
+      CreationDate: DateTime
 
       ExpenditureObject: string
-      ExpenditureObjectDescription: string
       EstimatedAmountOfMoney: Money }
 
 type ActualSpending =
     { Id: SpendingId
-      CreateDate: DateTime
+      CreationDate: DateTime
 
       ExpenditureObject: string
-      ExpenditureObjectDescription: string
       EstimatedAmountOfMoney: Money
 
       ActualMoneySpent: Money
@@ -46,18 +44,16 @@ module Spending =
         | Actual a ->
           Actual
             <| { Id = id
-                 CreateDate = a.CreateDate
+                 CreationDate = a.CreationDate
                  ExpenditureObject = a.ExpenditureObject
-                 ExpenditureObjectDescription = a.ExpenditureObjectDescription
                  EstimatedAmountOfMoney = a.EstimatedAmountOfMoney
                  ActualMoneySpent = a.ActualMoneySpent
                  SpentDate = a.SpentDate }
         | Expected e ->
             Expected
             <| { Id = id
-                 CreateDate = e.CreateDate
+                 CreationDate = e.CreationDate
                  ExpenditureObject = e.ExpenditureObject
-                 ExpenditureObjectDescription = e.ExpenditureObjectDescription
                  EstimatedAmountOfMoney = e.EstimatedAmountOfMoney }
 
 module Currency =

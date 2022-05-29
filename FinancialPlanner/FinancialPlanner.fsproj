@@ -8,7 +8,8 @@
 
     <ItemGroup>
         <Compile Include="Domain.fs" />
-        <Compile Include="DataContext.fs" />
+        <Compile Include="Data.fs" />
+        <Compile Include="ConsoleUI.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
 
