@@ -24,7 +24,7 @@ module Program =
             printf ">>> "
             let command = Console.ReadLine() |> resolveCommand
             match command with
-            | Some cmd -> cmd |> executeCommand |> Async.RunSynchronously
-            | None -> printfn "Command not defined"
+            | Ok cmd -> cmd |> executeCommand |> Async.RunSynchronously
+            | Error e -> printfn $"%A{e}"
             printfn ""
         0

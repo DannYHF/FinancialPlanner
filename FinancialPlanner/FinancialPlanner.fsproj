@@ -3,11 +3,12 @@
     <PropertyGroup>
         <OutputType>Exe</OutputType>
         <TargetFramework>net6.0</TargetFramework>
-        <RootNamespace>FinancialPlanner.Console</RootNamespace>
+        <RootNamespace>FinancialPlanner</RootNamespace>
     </PropertyGroup>
 
     <ItemGroup>
         <Compile Include="Domain.fs" />
+        <Compile Include="Error.fs" />
         <Compile Include="Data.fs" />
         <Compile Include="ConsoleUI.fs" />
         <Compile Include="Program.fs" />
