@@ -1,4 +1,4 @@
-module FinancialPlanner.Data
+module FinancialPlanner
 
 open System.IO
 open System.Threading.Tasks
