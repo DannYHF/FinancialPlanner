@@ -1,10 +1,9 @@
 module FinancialPlanner.Data
 
-open System.IO
 open System.Threading.Tasks
+open System.IO
 open FSharp.Json
 open FinancialPlanner.Domain
-open Microsoft.FSharp.Control
 
 let filePath = "../../../Data/Spendings.json"
 

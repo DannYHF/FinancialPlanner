@@ -1,10 +1,10 @@
 module FinancialPlanner.ConsoleUI 
 
 open System
-open Microsoft.FSharp.Core
 open FinancialPlanner.Domain
-open FinancialPlanner.UICommands
 open FinancialPlanner.Data
+open FinancialPlanner.CommandParameters
+open FinancialPlanner.UICommands
 
 
 let spendingPresentation spending =
@@ -30,10 +30,7 @@ let executeCommand command =
         match command with
         | ShowSpendings cmd ->
             spendings
-            |> List.take (
-                match cmd.Count with
-                | Some c -> c
-                | None -> spendings.Length)
+            |> (filterShowSpending cmd.FilterParameters)
             |> List.iter (fun u -> printf $"%s{u |> spendingPresentation}")
         | ClearConsole -> Console.Clear()
     }

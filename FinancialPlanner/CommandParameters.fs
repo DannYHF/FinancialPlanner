@@ -32,6 +32,14 @@ let parseParam (param: string): Result<CommandParameter, CommandError> =
             Error ParsingFailed
     else
         Error ParsingFailed
-        
+
+let rec filterShowSpending filters items  =
+    match filters with
+    | param::tail ->
+        match param with
+        | CountParameter p -> (items |> Helper.safeTake p.Count) |> filterShowSpending tail
+    | [] -> items
+     
+   
 let parseParams (parameters: string list) =
     parameters |> List.map parseParam            

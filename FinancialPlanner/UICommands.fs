@@ -1,10 +1,11 @@
-module FinancialPlanner.UICommands 
+module FinancialPlanner.UICommands
 
-open FinancialPlanner.CommandParameters
-open FinancialPlanner.Error
 open System
+open FinancialPlanner.Error
+open FinancialPlanner.CommandParameters
 
-type ShowSpendingsCommand = { Count: int option }
+type ShowSpendingsCommand =
+    { FilterParameters: CommandParameter list }
 
 type Command =
     | ShowSpendings of ShowSpendingsCommand
@@ -19,21 +20,25 @@ let rec buildShowSpendingsCommandRec
     (parameters: CommandParameter list)
     : Result<ShowSpendingsCommand, CommandError> =
     match parameters with
-    | head::tail ->
+    | head :: tail ->
         match command with
         | Ok cmd ->
             match head with
-            | CountParameter p -> buildShowSpendingsCommandRec (Ok { cmd with Count = Some p.Count }) tail
+            | CountParameter p ->
+                buildShowSpendingsCommandRec
+                    (Ok
+                        { cmd with
+                              FilterParameters = (CountParameter <| p) :: cmd.FilterParameters })
+                    tail
         | Error error -> Error error
-
     | [] -> command
 
 let buildShowSpendingsCommand =
-    buildShowSpendingsCommandRec (Ok { Count = None })
+    buildShowSpendingsCommandRec (Ok { FilterParameters = [] })
 
 let resolveCommand (input: string) : Result<Command, CommandError list> =
     if input |> String.IsNullOrEmpty then
-        Error [ParsingFailed]
+        Error [ ParsingFailed ]
     else
         let words =
             input.ToLower().Split " "
@@ -42,19 +47,16 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
 
         let parsedParameters = words |> List.skip 1 |> parseParams
         let cmdName = (words |> List.take 1).[0]
-
         let errors = parsedParameters |> Helper.getErrors
-
         let parameters = parsedParameters |> Helper.getResults
-                    
-               
+
         if errors.IsEmpty then
             match cmdName with
             | s when s = ShowSpendingsCommandName ->
                 match (parameters |> buildShowSpendingsCommand) with
                 | Ok cmd -> Ok(ShowSpendings <| cmd)
-                | Error error -> Error [error]
+                | Error error -> Error [ error ]
             | c when c = ClearConsoleCommandName -> Ok ClearConsole
-            | _ -> Error [UndefinedCommand]
+            | _ -> Error [ UndefinedCommand ]
         else
             Error errors

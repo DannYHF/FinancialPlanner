@@ -1,8 +1,8 @@
 open System
 open System.Text
 open FinancialPlanner.Domain
-open FinancialPlanner.ConsoleUI
 open FinancialPlanner.UICommands
+open FinancialPlanner.ConsoleUI
 
 let spending: Spending = Expected {
     Id = SpendingId(Guid.NewGuid())
