@@ -1,4 +1,4 @@
-namespace FinancialPlanner.Domain
+module FinancialPlanner.Domain
 
 open System
 

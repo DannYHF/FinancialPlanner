@@ -1,5 +1,6 @@
-namespace FinancialPlanner.Error
+module FinancialPlanner.Error
 
 type CommandError =
     | ParsingFailed
-    | UndefinedParameterValueType
+    | UndefinedParameter
+    | UndefinedCommand

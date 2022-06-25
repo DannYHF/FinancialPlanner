@@ -1,4 +1,4 @@
-module FinancialPlanner
+module FinancialPlanner.Data
 
 open System.IO
 open System.Threading.Tasks
@@ -6,8 +6,7 @@ open FSharp.Json
 open FinancialPlanner.Domain
 open Microsoft.FSharp.Control
 
-module Data =
-    let filePath = "../../../Data/Spendings.json"
+let filePath = "../../../Data/Spendings.json"
 
 type JsonDataContext(dataFilePath: string) =
     let mutable spendings: Spending list = []
