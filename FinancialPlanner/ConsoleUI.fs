@@ -1,7 +1,8 @@
-module FinancialPlanner.ConsoleUI 
+module FinancialPlanner.ConsoleUI
 
 open System
 open FinancialPlanner.Domain
+open FinancialPlanner.Domain.Spending
 open FinancialPlanner.Data
 open FinancialPlanner.CommandParameters
 open FinancialPlanner.UICommands
@@ -29,8 +30,18 @@ let executeCommand command =
 
         match command with
         | ShowSpendings cmd ->
-            spendings
-            |> (filterShowSpending cmd.FilterParameters)
-            |> List.iter (fun u -> printf $"%s{u |> spendingPresentation}")
+            match spendings
+                  |> Ok
+                  |> (filterShowSpending cmd.FilterParameters) with
+            | Ok s -> s |> List.iter (fun u -> printf $"%s{u |> spendingPresentation}")
+            | Error e -> printfn $"%A{e}"
+        | CreateExpectedSpending cmd ->
+            do!
+                cmd.Form
+                |> createExpected
+                |> Expected
+                |> ctx.addSpending
         | ClearConsole -> Console.Clear()
+
+        do! ctx.saveChanges
     }

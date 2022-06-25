@@ -33,6 +33,9 @@ type Spending =
     | Expected of ExpectedSpending
 
 module Spending =
+    type CreateExpectedSpendingForm =
+        { ExpenditureObject: string
+          EstimatedCost: Money }    
 
     let getId spending =
         match spending with
@@ -55,6 +58,12 @@ module Spending =
                  CreationDate = e.CreationDate
                  ExpenditureObject = e.ExpenditureObject
                  EstimatedCost = e.EstimatedCost }
+    
+    let createExpected form =
+        { Id = SpendingId (Guid.NewGuid ())
+          CreationDate = DateTime.Now
+          ExpenditureObject = form.ExpenditureObject
+          EstimatedCost = form.EstimatedCost}
 
 module Currency =
     let Dollar: Currency =

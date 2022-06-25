@@ -1,9 +1,9 @@
 module FinancialPlanner.UICommands
 
 open System
+open FinancialPlanner.Domain.Spending
 open FinancialPlanner.Error
 open FinancialPlanner.CommandParameters
-open FinancialPlanner.Form
 
 type ShowSpendingsCommand =
     { FilterParameters: CommandParameter list }

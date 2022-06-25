@@ -1,6 +1,7 @@
 module FinancialPlanner.CommandParameters
 
 open System
+open System.Collections.Generic
 open FinancialPlanner.Domain
 open Error
 
@@ -15,6 +16,12 @@ type CommandParameter =
 let CountParameterName = "count"
 let EstimatedCostParameterName = "estimatedCost"
 let ExpenditureObjectParameterName = "expenditureObject"
+
+let toParameterName param =
+    match param with
+    | CountParameter _ -> CountParameterName
+    | EstimatedCost _ -> EstimatedCostParameterName
+    | ExpenditureObjectParameter _ -> ExpenditureObjectParameterName
 
 let (|CountCommandParameter|_|) (name: string, value: string) =
     let mutable res = 0
@@ -41,18 +48,17 @@ let parseParam (param: string): Result<CommandParameter, CommandError> =
         Error (ParsingFailed "Invalid parameter syntax. Should look like: -[ParameterName]:[ParameterValue]")
 
 let rec filterShowSpending filters items  =
-    match filters with
-    | param::tail ->
-        match param with
-        | CountParameter p -> (items |> Helper.safeTake p.Count) |> filterShowSpending tail
-    | [] -> items
+    match items with
+    | Ok l ->
+        match filters with
+        | param::tail ->
+            match param with
+            | CountParameter p -> (l |> Helper.safeTake p.Count) |> Ok |> filterShowSpending tail
+            | _ -> Error (ExpectedFilterParameter (param |> toParameterName))
+        | [] -> items
+    | Error e -> Error e   
      
    
 let parseParams (parameters: string list) =
     parameters |> List.map parseParam
     
-let toParameterName param =
-    match param with
-    | CountParameter _ -> CountParameterName
-    | EstimatedCost _ -> EstimatedCostParameterName
-    | ExpenditureObjectParameter _ -> ExpenditureObjectParameterName

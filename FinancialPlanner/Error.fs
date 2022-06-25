@@ -5,4 +5,5 @@ type CommandError =
     | UndefinedParameter of parameterName: string * parameterValue: string
     | UndefinedCommand of commandName: string
     | NotSuitableParameter of commandName: string * parameterName: string
+    | ExpectedFilterParameter of parameterName: string
     
