@@ -3,17 +3,23 @@ module FinancialPlanner.UICommands
 open System
 open FinancialPlanner.Error
 open FinancialPlanner.CommandParameters
+open FinancialPlanner.Form
 
 type ShowSpendingsCommand =
     { FilterParameters: CommandParameter list }
 
+type CreateExpectedSpendingCommand =
+    { Form: CreateExpectedSpendingForm }    
+
 type Command =
     | ShowSpendings of ShowSpendingsCommand
     | ClearConsole
+    | CreateExpectedSpending of CreateExpectedSpendingCommand
 
 
 let ShowSpendingsCommandName = "show"
 let ClearConsoleCommandName = "clear"
+let CreateExpectedSpendingName = "createExpected"
 
 let rec buildShowSpendingsCommandRec
     (command: Result<ShowSpendingsCommand, CommandError>)
@@ -30,15 +36,22 @@ let rec buildShowSpendingsCommandRec
                         { cmd with
                               FilterParameters = (CountParameter <| p) :: cmd.FilterParameters })
                     tail
+            | p -> Error (NotSuitableParameter (ShowSpendingsCommandName, p |> toParameterName))       
         | Error error -> Error error
     | [] -> command
 
 let buildShowSpendingsCommand =
     buildShowSpendingsCommandRec (Ok { FilterParameters = [] })
 
+let toCommandName command =
+    match command with
+    | ShowSpendings _ -> ShowSpendingsCommandName
+    | ClearConsole -> ClearConsoleCommandName
+    | CreateExpectedSpending _ -> CreateExpectedSpendingName
+
 let resolveCommand (input: string) : Result<Command, CommandError list> =
     if input |> String.IsNullOrEmpty then
-        Error [ ParsingFailed ]
+        Error [ ParsingFailed "Looks like as though input empty O_o" ]
     else
         let words =
             input.ToLower().Split " "
@@ -57,6 +70,6 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
                 | Ok cmd -> Ok(ShowSpendings <| cmd)
                 | Error error -> Error [ error ]
             | c when c = ClearConsoleCommandName -> Ok ClearConsole
-            | _ -> Error [ UndefinedCommand ]
+            | _ -> Error [ UndefinedCommand $"Command name: %s{cmdName}" ]
         else
             Error errors

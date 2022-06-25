@@ -16,16 +16,16 @@ type ExpectedSpending =
       CreationDate: DateTime
 
       ExpenditureObject: string
-      EstimatedAmountOfMoney: Money }
+      EstimatedCost: Money }
 
 type ActualSpending =
     { Id: SpendingId
       CreationDate: DateTime
 
       ExpenditureObject: string
-      EstimatedAmountOfMoney: Money
+      EstimatedCost: Money
 
-      ActualMoneySpent: Money
+      ActualCost: Money
       SpentDate: DateTime }
 
 type Spending =
@@ -46,15 +46,15 @@ module Spending =
             <| { Id = id
                  CreationDate = a.CreationDate
                  ExpenditureObject = a.ExpenditureObject
-                 EstimatedAmountOfMoney = a.EstimatedAmountOfMoney
-                 ActualMoneySpent = a.ActualMoneySpent
+                 EstimatedCost = a.EstimatedCost
+                 ActualCost = a.ActualCost
                  SpentDate = a.SpentDate }
         | Expected e ->
             Expected
             <| { Id = id
                  CreationDate = e.CreationDate
                  ExpenditureObject = e.ExpenditureObject
-                 EstimatedAmountOfMoney = e.EstimatedAmountOfMoney }
+                 EstimatedCost = e.EstimatedCost }
 
 module Currency =
     let Dollar: Currency =

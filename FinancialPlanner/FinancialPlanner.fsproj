@@ -8,6 +8,7 @@
 
     <ItemGroup>
         <Compile Include="Domain.fs" />
+        <Compile Include="Form.fs" />
         <Compile Include="Error.fs" />
         <Compile Include="Data.fs" />
         <Compile Include="Helper.fs" />

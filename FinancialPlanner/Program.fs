@@ -8,7 +8,7 @@ let spending: Spending = Expected {
     Id = SpendingId(Guid.NewGuid())
     CreationDate = DateTime.Now
     ExpenditureObject = "Монитор"
-    EstimatedAmountOfMoney = {
+    EstimatedCost = {
         Amount = 50000m
         Currency = Currency.Ruble
     }

@@ -23,7 +23,6 @@ type JsonDataContext(dataFilePath: string) =
 
         spendings <- spending :: spendings
     }
-
     
     member this.getSpendings() = async {
         let! json = this.readLines dataFilePath |> Async.AwaitTask
@@ -32,13 +31,11 @@ type JsonDataContext(dataFilePath: string) =
         return spendings
     }
         
-        
     member private this.readLines(filePath: string): string Task = task {
         use file = File.OpenRead(filePath)
         use sr = new StreamReader(file)
         return! sr.ReadToEndAsync()
     }
-
     
     member private this.writeLines (content: string) (filePath: string): Task = task {
         use file = File.Open(filePath, FileMode.Create)
