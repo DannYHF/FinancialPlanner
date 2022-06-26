@@ -31,10 +31,20 @@ let (|CountCommandParameter|_|) (name: string, value: string) =
         Some res 
     else
         None
+
+let (|EstimatedCostCommandParameter|_|) (name: string, value: string) =
+    let parsedMoney = Money.tryParse value
+    
+    match parsedMoney with
+    | Some m when name = EstimatedCostParameterName ->
+        Some m
+    | Some _    
+    | None -> None    
         
 let buildParam name value: Result<CommandParameter, CommandError> =
     match (name, value) with
     | CountCommandParameter i -> Ok (CountParameter <| { Count = i })
+    | EstimatedCostCommandParameter i -> Ok (EstimatedCost <| { EstimatedCost = i })
     | _ -> Error (UndefinedParameter  (name, value))
 
 let parseParam (param: string): Result<CommandParameter, CommandError> =

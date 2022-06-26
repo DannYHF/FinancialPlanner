@@ -43,6 +43,9 @@ let rec buildShowSpendingsCommandRec
 let buildShowSpendingsCommand =
     buildShowSpendingsCommandRec (Ok { FilterParameters = [] })
 
+let buildCreateExpectedSpendingCommand parameters =
+    failwith "ToDo" //TODO: write next
+
 let toCommandName command =
     match command with
     | ShowSpendings _ -> ShowSpendingsCommandName
@@ -65,11 +68,18 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
 
         if errors.IsEmpty then
             match cmdName with
-            | s when s = ShowSpendingsCommandName ->
+            | show when show = ShowSpendingsCommandName ->
                 match (parameters |> buildShowSpendingsCommand) with
-                | Ok cmd -> Ok(ShowSpendings <| cmd)
+                | Ok cmd -> Ok (ShowSpendings <| cmd)
                 | Error error -> Error [ error ]
-            | c when c = ClearConsoleCommandName -> Ok ClearConsole
+            
+            | createEx when createEx = CreateExpectedSpendingName ->
+                match (parameters |> buildCreateExpectedSpendingCommand) with
+                | Ok cmd -> Ok (CreateExpectedSpending <| cmd)
+                | Error error -> Error [ error ]
+                
+            | clear when clear = ClearConsoleCommandName -> Ok ClearConsole
+            
             | _ -> Error [ UndefinedCommand $"Command name: %s{cmdName}" ]
         else
             Error errors
