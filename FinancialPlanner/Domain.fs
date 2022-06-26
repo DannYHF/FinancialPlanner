@@ -7,8 +7,7 @@ type SpendingId = SpendingId of Guid
 type Currency =
     { Code: string
       Name: string
-      MainPostFix: char
-      SupportedPostFixes: char list }
+      PostFix: char}
 
 type Money = { Amount: decimal; Currency: Currency }
 
@@ -37,14 +36,16 @@ module Currency =
     let Dollar: Currency =
         { Code = "USD"
           Name = "Доллар"
-          MainPostFix = '$'
-          SupportedPostFixes = [ '$'; 'д' ] }
+          PostFix = '$' }
+    
+    let DollarSupportedPostFixes = [ '$'; 'д'; 'd' ]     
 
     let Ruble: Currency =
         { Code = "RUB"
           Name = "Рубль"
-          MainPostFix = '₽'
-          SupportedPostFixes = [ '₽'; 'р' ] }
+          PostFix = '₽' }
+    
+    let RubleSupportedPostFixes = [ '₽'; 'р'; 'r' ]    
 
 [<RequireQualifiedAccess>]        
 module Money =
@@ -54,10 +55,10 @@ module Money =
         let strValue = money.Substring (0, money.Length - 1)
         if Decimal.TryParse (strValue, &value) then
             match postFix with
-            | p when Currency.Dollar.SupportedPostFixes |> List.contains p ->
+            | p when Currency.DollarSupportedPostFixes |> List.contains p ->
                     { Amount = value
                       Currency = Currency.Dollar } |> Some
-            | p when Currency.Ruble.SupportedPostFixes |> List.contains p ->
+            | p when Currency.RubleSupportedPostFixes |> List.contains p ->
                     { Amount = value
                       Currency = Currency.Ruble } |> Some                    
             | _ -> None

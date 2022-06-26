@@ -21,6 +21,7 @@ module Program =
         //spending |> ctx.addSpending |> Async.RunSynchronously
         //ctx.saveChanges |> Async.RunSynchronously
         Console.OutputEncoding <- Encoding.Unicode
+        Console.InputEncoding <- Encoding.Unicode
         while true do
             printf ">>> "
             let command = Console.ReadLine() |> resolveCommand

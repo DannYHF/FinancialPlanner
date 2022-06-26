@@ -1,7 +1,6 @@
 module FinancialPlanner.CommandParameters
 
 open System
-open System.Collections.Generic
 open FinancialPlanner.Domain
 open Error
 
@@ -11,7 +10,7 @@ type EstimatedCostCommandParameter = { EstimatedCost: Money }
 type CommandParameter =
     | CountParameter of CountCommandParameter
     | ExpenditureObjectParameter of ExpenditureObjectCommandParameter
-    | EstimatedCost of EstimatedCostCommandParameter
+    | EstimatedCostParameter of EstimatedCostCommandParameter
 
 let CountParameterName = "count"
 let EstimatedCostParameterName = "estimatedCost"
@@ -20,7 +19,7 @@ let ExpenditureObjectParameterName = "expenditureObject"
 let toParameterName param =
     match param with
     | CountParameter _ -> CountParameterName
-    | EstimatedCost _ -> EstimatedCostParameterName
+    | EstimatedCostParameter _ -> EstimatedCostParameterName
     | ExpenditureObjectParameter _ -> ExpenditureObjectParameterName
 
 let (|CountCommandParameter|_|) (name: string, value: string) =
@@ -39,12 +38,18 @@ let (|EstimatedCostCommandParameter|_|) (name: string, value: string) =
     | Some m when name = EstimatedCostParameterName ->
         Some m
     | Some _    
-    | None -> None    
+    | None -> None
+
+let (|ExpenditureObjectCommandParameter|_|) (name: string, value: string) =
+    if name = ExpenditureObjectParameterName then
+        Some value
+    else None    
         
 let buildParam name value: Result<CommandParameter, CommandError> =
     match (name, value) with
     | CountCommandParameter i -> Ok (CountParameter <| { Count = i })
-    | EstimatedCostCommandParameter i -> Ok (EstimatedCost <| { EstimatedCost = i })
+    | EstimatedCostCommandParameter i -> Ok (EstimatedCostParameter <| { EstimatedCost = i })
+    | ExpenditureObjectCommandParameter i -> Ok (ExpenditureObjectParameter <| { Object = i }) 
     | _ -> Error (UndefinedParameter  (name, value))
 
 let parseParam (param: string): Result<CommandParameter, CommandError> =

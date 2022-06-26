@@ -6,4 +6,4 @@ type CommandError =
     | UndefinedCommand of commandName: string
     | NotSuitableParameter of commandName: string * parameterName: string
     | ExpectedFilterParameter of parameterName: string
-    
+    | MandatoryParametersAreNotFilled of requiredParameters: string list

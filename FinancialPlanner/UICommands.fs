@@ -17,7 +17,7 @@ type Command =
     | CreateExpectedSpending of CreateExpectedSpendingCommand
 
 
-let ShowSpendingsCommandName = "show"
+let ShowSpendingsCommandName = "list"
 let ClearConsoleCommandName = "clear"
 let CreateExpectedSpendingName = "createExpected"
 
@@ -43,8 +43,19 @@ let rec buildShowSpendingsCommandRec
 let buildShowSpendingsCommand =
     buildShowSpendingsCommandRec (Ok { FilterParameters = [] })
 
-let buildCreateExpectedSpendingCommand parameters =
-    failwith "ToDo" //TODO: write next
+let buildCreateExpectedSpendingCommand (parameters: CommandParameter list) =
+    if parameters.Length = 2 then
+        let estimatedCost = parameters |> List.tryFind (fun u -> match u with | EstimatedCostParameter _ -> true | _ -> false)
+        let expenditureObject = parameters |> List.tryFind (fun u -> match u with | ExpenditureObjectParameter _ -> true | _ -> false)
+        match (estimatedCost, expenditureObject) with
+        | Some (EstimatedCostParameter ec), Some (ExpenditureObjectParameter eo) ->
+               { Form = { EstimatedCost = ec.EstimatedCost
+                          ExpenditureObject = eo.Object } } |> Ok
+        | _ -> (MandatoryParametersAreNotFilled [ EstimatedCostParameterName; ExpenditureObjectParameterName ]) |> Error 
+    elif parameters.Length < 2 then
+        (ParsingFailed "Too few parameters are specified.") |> Error
+    else
+        (ParsingFailed "Too many parameters are specified.") |> Error
 
 let toCommandName command =
     match command with
@@ -57,12 +68,12 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
         Error [ ParsingFailed "Looks like as though input empty O_o" ]
     else
         let words =
-            input.ToLower().Split " "
+            input.Split " "
             |> Array.toList
             |> List.where (fun u -> not (u |> String.IsNullOrEmpty))
 
         let parsedParameters = words |> List.skip 1 |> parseParams
-        let cmdName = (words |> List.take 1).[0]
+        let cmdName = (words |> List.take 1).Head
         let errors = parsedParameters |> Helper.getErrors
         let parameters = parsedParameters |> Helper.getResults
 
