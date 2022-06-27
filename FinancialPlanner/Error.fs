@@ -1,4 +1,4 @@
-module FinancialPlanner.Error
+namespace FinancialPlanner.Error
 
 type CommandError =
     | ParsingFailed of string

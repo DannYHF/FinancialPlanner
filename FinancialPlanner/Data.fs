@@ -1,15 +1,16 @@
-module FinancialPlanner.Data
+namespace FinancialPlanner.Data
 
 open System.Threading.Tasks
 open System.IO
 open FSharp.Json
 open FinancialPlanner.Domain
 
-let filePath = "../../../Data/Spendings.json"
+
 
 type JsonDataContext(dataFilePath: string) =
     let mutable spendings: Spending list = []
     let mutable dataLoaded = false
+    let filePath = "../../../Data/Spendings.json"
    
     member this.saveChanges = async {
         let json = Json.serialize spendings

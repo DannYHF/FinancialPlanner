@@ -1,9 +1,10 @@
 module FinancialPlanner.UICommands
 
 open System
-open FinancialPlanner.Domain.Spending
+open FinancialPlanner.Domain
 open FinancialPlanner.Error
-open FinancialPlanner.CommandParameters
+open FinancialPlanner.Utils
+open FinancialPlanner.UICommandParameter
 
 type ShowSpendingsCommand =
     { FilterParameters: CommandParameter list }
@@ -74,8 +75,8 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
 
         let parsedParameters = words |> List.skip 1 |> parseParams
         let cmdName = (words |> List.take 1).Head
-        let errors = parsedParameters |> Helper.getErrors
-        let parameters = parsedParameters |> Helper.getResults
+        let errors = parsedParameters |> Result.getErrors
+        let parameters = parsedParameters |> Result.getResults
 
         if errors.IsEmpty then
             match cmdName with

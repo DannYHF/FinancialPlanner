@@ -4,7 +4,7 @@ open System
 open FinancialPlanner.Domain
 open FinancialPlanner.Domain.Spending
 open FinancialPlanner.Data
-open FinancialPlanner.CommandParameters
+open FinancialPlanner.UICommandParameter
 open FinancialPlanner.UICommands
 
 

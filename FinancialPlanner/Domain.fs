@@ -1,4 +1,4 @@
-module FinancialPlanner.Domain
+namespace FinancialPlanner.Domain
 
 open System
 
@@ -32,6 +32,10 @@ type Spending =
     | Actual of ActualSpending
     | Expected of ExpectedSpending
     
+type CreateExpectedSpendingForm =
+   { ExpenditureObject: string
+     EstimatedCost: Money }
+       
 module Currency =
     let Dollar: Currency =
         { Code = "USD"
@@ -66,10 +70,6 @@ module Money =
             None
 
 module Spending =
-    type CreateExpectedSpendingForm =
-        { ExpenditureObject: string
-          EstimatedCost: Money }    
-
     let getId spending =
         match spending with
         | Actual a -> a.Id
