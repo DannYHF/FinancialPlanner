@@ -27,18 +27,15 @@ let rec buildShowSpendingsCommandRec
     (parameters: CommandParameter list)
     : Result<ShowSpendingsCommand, CommandError> =
     match parameters with
-    | head :: tail ->
+    | param :: tail ->
         match command with
         | Ok cmd ->
-            match head with
+            match param with
             | CountParameter p ->
-                buildShowSpendingsCommandRec
-                    (Ok
-                        { cmd with
-                              FilterParameters = (CountParameter <| p) :: cmd.FilterParameters })
-                    tail
-            | p -> Error (NotSuitableParameter (ShowSpendingsCommandName, p |> toParameterName))       
-        | Error error -> Error error
+                 tail |> buildShowSpendingsCommandRec ({ cmd with FilterParameters = (CountParameter <| p) :: cmd.FilterParameters } |> Ok)
+            | EstimatedCostParameter _ -> (ShowSpendingsCommandName, param |> toParameterName) |> NotSuitableParameter |> Error
+            | ExpenditureObjectParameter _ -> (ShowSpendingsCommandName, param |> toParameterName) |> NotSuitableParameter |> Error
+        | Error error -> error |> Error
     | [] -> command
 
 let buildShowSpendingsCommand =
@@ -52,7 +49,7 @@ let buildCreateExpectedSpendingCommand (parameters: CommandParameter list) =
         | Some (EstimatedCostParameter ec), Some (ExpenditureObjectParameter eo) ->
                { Form = { EstimatedCost = ec.EstimatedCost
                           ExpenditureObject = eo.Object } } |> Ok
-        | _ -> (MandatoryParametersAreNotFilled [ EstimatedCostParameterName; ExpenditureObjectParameterName ]) |> Error 
+        | _ -> [ EstimatedCostParameterName; ExpenditureObjectParameterName ] |> MandatoryParametersAreNotFilled |> Error 
     elif parameters.Length < 2 then
         (ParsingFailed "Too few parameters are specified.") |> Error
     else
@@ -60,18 +57,18 @@ let buildCreateExpectedSpendingCommand (parameters: CommandParameter list) =
 
 let toCommandName command =
     match command with
-    | ShowSpendings _ -> ShowSpendingsCommandName
     | ClearConsole -> ClearConsoleCommandName
+    | ShowSpendings _ -> ShowSpendingsCommandName
     | CreateExpectedSpending _ -> CreateExpectedSpendingName
 
 let resolveCommand (input: string) : Result<Command, CommandError list> =
     if input |> String.IsNullOrEmpty then
-        Error [ ParsingFailed "Looks like as though input empty O_o" ]
+        [ ParsingFailed "Looks like as though input empty O_o" ] |> Error
     else
         let words =
             input.Split " "
             |> Array.toList
-            |> List.where (fun u -> not (u |> String.IsNullOrEmpty))
+            |> List.where (fun u -> u |> String.IsNullOrEmpty |> not)
 
         let parsedParameters = words |> List.skip 1 |> parseParams
         let cmdName = (words |> List.take 1).Head
@@ -82,16 +79,13 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
             match cmdName with
             | show when show = ShowSpendingsCommandName ->
                 match (parameters |> buildShowSpendingsCommand) with
-                | Ok cmd -> Ok (ShowSpendings <| cmd)
-                | Error error -> Error [ error ]
-            
+                | Ok cmd -> ShowSpendings <| cmd |> Ok
+                | Error error -> [ error ] |> Error
             | createEx when createEx = CreateExpectedSpendingName ->
                 match (parameters |> buildCreateExpectedSpendingCommand) with
-                | Ok cmd -> Ok (CreateExpectedSpending <| cmd)
-                | Error error -> Error [ error ]
-                
-            | clear when clear = ClearConsoleCommandName -> Ok ClearConsole
-            
+                | Ok cmd -> CreateExpectedSpending <| cmd |> Ok
+                | Error error -> [ error ] |> Error
+            | clear when clear = ClearConsoleCommandName -> ClearConsole |> Ok
             | _ -> Error [ UndefinedCommand $"Command name: %s{cmdName}" ]
         else
-            Error errors
+            errors |> Error

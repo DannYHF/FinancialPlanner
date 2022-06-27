@@ -1,6 +1,7 @@
 namespace FinancialPlanner
 
 open System
+open FinancialPlanner
 open FinancialPlanner.Domain
 open FinancialPlanner.Error
 open FinancialPlanner.Utils
@@ -23,7 +24,7 @@ module UICommandParameter =
         | CountParameter _ -> CountParameterName
         | EstimatedCostParameter _ -> EstimatedCostParameterName
         | ExpenditureObjectParameter _ -> ExpenditureObjectParameterName
-    
+     
     let (|CountCommandParameter|_|) (name: string, value: string) =
         let mutable res = 0
         let parsed = Int32.TryParse(value, &res)
@@ -49,9 +50,9 @@ module UICommandParameter =
             
     let buildParam name value: Result<CommandParameter, CommandError> =
         match (name, value) with
-        | CountCommandParameter i -> Ok (CountParameter <| { Count = i })
-        | EstimatedCostCommandParameter i -> Ok (EstimatedCostParameter <| { EstimatedCost = i })
-        | ExpenditureObjectCommandParameter i -> Ok (ExpenditureObjectParameter <| { Object = i }) 
+        | CountCommandParameter i -> CountParameter <| { Count = i } |> Ok
+        | EstimatedCostCommandParameter i -> EstimatedCostParameter <| { EstimatedCost = i } |> Ok
+        | ExpenditureObjectCommandParameter i -> ExpenditureObjectParameter <| { Object = i } |> Ok
         | _ -> Error (UndefinedParameter  (name, value))
     
     let parseParam (param: string): Result<CommandParameter, CommandError> =
@@ -70,8 +71,10 @@ module UICommandParameter =
             match filters with
             | param::tail ->
                 match param with
-                | CountParameter p -> (l |> List.safeTake p.Count) |> Ok |> filterShowSpending tail
-                | _ -> Error (ExpectedFilterParameter (param |> toParameterName))
+                | CountParameter p -> l |> List.safeTake p.Count |> Ok |> filterShowSpending tail
+                | EstimatedCostParameter _
+                | ExpenditureObjectParameter _ ->
+                    param |> toParameterName |> ExpectedFilterParameter |> Error
             | [] -> items
         | Error e -> Error e   
          

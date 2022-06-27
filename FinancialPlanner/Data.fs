@@ -7,14 +7,14 @@ open FinancialPlanner.Domain
 
 
 
-type JsonDataContext(dataFilePath: string) =
+type JsonDataContext() =
     let mutable spendings: Spending list = []
     let mutable dataLoaded = false
     let filePath = "../../../Data/Spendings.json"
    
     member this.saveChanges = async {
         let json = Json.serialize spendings
-        do! this.writeLines json dataFilePath |> Async.AwaitTask 
+        do! this.writeLines json filePath |> Async.AwaitTask 
     }
 
     member this.addSpending(spending: Spending) = async {
@@ -26,7 +26,7 @@ type JsonDataContext(dataFilePath: string) =
     }
     
     member this.getSpendings() = async {
-        let! json = this.readLines dataFilePath |> Async.AwaitTask
+        let! json = this.readLines filePath |> Async.AwaitTask
         let uploadModels = Json.deserialize<Spending list> json
         spendings <- uploadModels
         return spendings

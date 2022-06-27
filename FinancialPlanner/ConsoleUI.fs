@@ -25,7 +25,7 @@ let spendingPresentation spending =
 
 let executeCommand command =
     async {
-        let ctx = JsonDataContext filePath
+        let ctx = JsonDataContext ()
         let! spendings = ctx.getSpendings ()
 
         match command with
