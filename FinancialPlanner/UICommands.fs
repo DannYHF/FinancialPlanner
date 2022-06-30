@@ -1,6 +1,7 @@
 module FinancialPlanner.UICommands
 
 open System
+open FinancialPlanner.Abstractions
 open FinancialPlanner.Domain
 open FinancialPlanner.Error
 open FinancialPlanner.Utils
@@ -10,17 +11,23 @@ type ShowSpendingsCommand =
     { FilterParameters: CommandParameter list }
 
 type CreateExpectedSpendingCommand =
-    { Form: CreateExpectedSpendingForm }    
+    { Form: CreateExpectedSpendingForm }
+    
+type MakeActualSpendingCommand =
+    { ExpectedSpendingId: SpendingId
+      ActualCost: Money
+      SpendDate: DateTime }
 
 type Command =
-    | ShowSpendings of ShowSpendingsCommand
     | ClearConsole
+    | ShowSpendings of ShowSpendingsCommand
+    | MakeActualSpending of MakeActualSpendingCommand
     | CreateExpectedSpending of CreateExpectedSpendingCommand
-
 
 let ShowSpendingsCommandName = "list"
 let ClearConsoleCommandName = "clear"
 let CreateExpectedSpendingName = "createExpected"
+let MakeActualSpendingName = "makeActual"
 
 let rec buildShowSpendingsCommandRec
     (command: Result<ShowSpendingsCommand, CommandError>)
@@ -33,7 +40,10 @@ let rec buildShowSpendingsCommandRec
             match param with
             | CountParameter p ->
                  tail |> buildShowSpendingsCommandRec ({ cmd with FilterParameters = (CountParameter <| p) :: cmd.FilterParameters } |> Ok)
-            | EstimatedCostParameter _ -> (ShowSpendingsCommandName, param |> toParameterName) |> NotSuitableParameter |> Error
+            | SpendingIdParameter _
+            | ActualCostParameter _
+            | SpendDateParameter _
+            | EstimatedCostParameter _
             | ExpenditureObjectParameter _ -> (ShowSpendingsCommandName, param |> toParameterName) |> NotSuitableParameter |> Error
         | Error error -> error |> Error
     | [] -> command
@@ -43,23 +53,40 @@ let buildShowSpendingsCommand =
 
 let buildCreateExpectedSpendingCommand (parameters: CommandParameter list) =
     if parameters.Length = 2 then
-        let estimatedCost = parameters |> List.tryFind (fun u -> match u with | EstimatedCostParameter _ -> true | _ -> false)
-        let expenditureObject = parameters |> List.tryFind (fun u -> match u with | ExpenditureObjectParameter _ -> true | _ -> false)
+        let estimatedCost = parameters |> List.tryFind ^fun u -> match u with | EstimatedCostParameter _ -> true | _ -> false
+        let expenditureObject = parameters |> List.tryFind ^fun u -> match u with | ExpenditureObjectParameter _ -> true | _ -> false
         match (estimatedCost, expenditureObject) with
         | Some (EstimatedCostParameter ec), Some (ExpenditureObjectParameter eo) ->
-               { Form = { EstimatedCost = ec.EstimatedCost
-                          ExpenditureObject = eo.Object } } |> Ok
+               { Form = { EstimatedCost = ec
+                          ExpenditureObject = eo } } |> Ok
         | _ -> [ EstimatedCostParameterName; ExpenditureObjectParameterName ] |> MandatoryParametersAreNotFilled |> Error 
     elif parameters.Length < 2 then
         (ParsingFailed "Too few parameters are specified.") |> Error
     else
         (ParsingFailed "Too many parameters are specified.") |> Error
+        
+let buildMakeActualSpendingCommand (parameters: CommandParameter list) =
+    if parameters.Length = 3 then
+        let spendDate = parameters |> List.tryFind ^fun u -> match u with | SpendDateParameter _ -> true | _ -> false
+        let actualCost = parameters |> List.tryFind ^fun u -> match u with | ActualCostParameter _ -> true | _ -> false
+        let spendingId = parameters |> List.tryFind ^fun u -> match u with | SpendingIdParameter _ -> true | _ -> false
+        match (spendDate, actualCost, spendingId) with
+        | Some (SpendDateParameter sd), Some (ActualCostParameter ac), Some(SpendingIdParameter si) ->
+               { ExpectedSpendingId = si
+                 ActualCost = ac
+                 SpendDate = sd } |> Ok
+        | _ -> [ EstimatedCostParameterName; ExpenditureObjectParameterName ] |> MandatoryParametersAreNotFilled |> Error 
+    elif parameters.Length < 3 then
+        (ParsingFailed "Too few parameters are specified.") |> Error
+    else
+        (ParsingFailed "Too many parameters are specified.") |> Error        
 
 let toCommandName command =
     match command with
     | ClearConsole -> ClearConsoleCommandName
     | ShowSpendings _ -> ShowSpendingsCommandName
     | CreateExpectedSpending _ -> CreateExpectedSpendingName
+    | MakeActualSpending _ -> MakeActualSpendingName
 
 let resolveCommand (input: string) : Result<Command, CommandError list> =
     if input |> String.IsNullOrEmpty then
@@ -68,7 +95,7 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
         let words =
             input.Split " "
             |> Array.toList
-            |> List.where (fun u -> u |> String.IsNullOrEmpty |> not)
+            |> List.where ^fun u -> u |> String.IsNullOrEmpty |> not
 
         let parsedParameters = words |> List.skip 1 |> parseParams
         let cmdName = (words |> List.take 1).Head
@@ -85,6 +112,10 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
                 match (parameters |> buildCreateExpectedSpendingCommand) with
                 | Ok cmd -> CreateExpectedSpending <| cmd |> Ok
                 | Error error -> [ error ] |> Error
+            | makeActual when makeActual = MakeActualSpendingName ->
+                match (parameters |> buildMakeActualSpendingCommand) with
+                | Ok cmd -> MakeActualSpending <| cmd |> Ok
+                | Error error -> [ error ] |> Error                
             | clear when clear = ClearConsoleCommandName -> ClearConsole |> Ok
             | _ -> Error [ UndefinedCommand $"Command name: %s{cmdName}" ]
         else

@@ -41,6 +41,13 @@ let executeCommand command =
                 |> createExpected
                 |> Expected
                 |> ctx.addSpending
+        | MakeActualSpending cmd ->
+            match (spendings |> List.tryFind (fun u -> cmd.ExpectedSpendingId = (u |> getId))) with
+            | Some (Expected ex) -> ex
+                                    |> makeActual (cmd.ActualCost, cmd.SpendDate)
+                                    |> ignore
+            | Some (Actual _) -> printfn $"Spending must be expected, but was actual"
+            | None -> printfn $"Spending with guid %A{cmd.ExpectedSpendingId}"
         | ClearConsole -> Console.Clear ()
 
         do! ctx.saveChanges

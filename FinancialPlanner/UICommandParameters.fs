@@ -6,24 +6,48 @@ open FinancialPlanner.Domain
 open FinancialPlanner.Error
 open FinancialPlanner.Utils
 
-type CountCommandParameter = { Count: int }
-type ExpenditureObjectCommandParameter = { Object: string }
-type EstimatedCostCommandParameter = { EstimatedCost: Money }
 type CommandParameter =
-    | CountParameter of CountCommandParameter
-    | ExpenditureObjectParameter of ExpenditureObjectCommandParameter
-    | EstimatedCostParameter of EstimatedCostCommandParameter
+    | CountParameter of Count: int
+    | ExpenditureObjectParameter of Object: string
+    | EstimatedCostParameter of EstimatedCost: Money
+    | ActualCostParameter of ActualCost: Money
+    | SpendDateParameter of SpendDate: DateTime
+    | SpendingIdParameter of SpendingId: SpendingId
 
 module UICommandParameter =
     let CountParameterName = "count"
     let EstimatedCostParameterName = "estimatedCost"
     let ExpenditureObjectParameterName = "expenditureObject"
+    let ActualCostParameterName = "actualCost"
+    let SpendDateParameterName = "spendDate"
+    let SpendingIdParameterName = "spendingId"
     
     let toParameterName param =
         match param with
         | CountParameter _ -> CountParameterName
         | EstimatedCostParameter _ -> EstimatedCostParameterName
         | ExpenditureObjectParameter _ -> ExpenditureObjectParameterName
+        | ActualCostParameter _ -> ActualCostParameterName
+        | SpendDateParameter _ -> SpendDateParameterName
+        | SpendingIdParameter _ -> SpendingIdParameterName
+    
+    let (|SpendDateCommandParameter|_|) (name: string, value: string) =
+        let mutable res = DateTime.Today
+        let parsed = DateTime.TryParse(value, &res)
+        
+        if parsed && name = SpendDateParameterName then
+            Some res 
+        else
+            None
+        
+    let (|ActualCostCommandParameter|_|) (name: string, value: string) =
+        let parsedMoney = Money.tryParse value
+        
+        match parsedMoney with
+        | Some m when name = ActualCostParameterName ->
+            Some m
+        | Some _    
+        | None -> None
      
     let (|CountCommandParameter|_|) (name: string, value: string) =
         let mutable res = 0
@@ -33,6 +57,15 @@ module UICommandParameter =
             Some res 
         else
             None
+            
+    let (|SpendingIdCommandParameter|_|) (name: string, value: string) =
+        let mutable res = Guid.Empty
+        let parsed = Guid.TryParse(value, &res)
+        
+        if parsed && name = SpendingIdParameterName then
+            res |> SpendingId |> Some 
+        else
+            None            
     
     let (|EstimatedCostCommandParameter|_|) (name: string, value: string) =
         let parsedMoney = Money.tryParse value
@@ -50,9 +83,12 @@ module UICommandParameter =
             
     let buildParam name value: Result<CommandParameter, CommandError> =
         match (name, value) with
-        | CountCommandParameter i -> CountParameter <| { Count = i } |> Ok
-        | EstimatedCostCommandParameter i -> EstimatedCostParameter <| { EstimatedCost = i } |> Ok
-        | ExpenditureObjectCommandParameter i -> ExpenditureObjectParameter <| { Object = i } |> Ok
+        | CountCommandParameter i -> CountParameter <| i |> Ok
+        | EstimatedCostCommandParameter i -> EstimatedCostParameter <| i |> Ok
+        | ExpenditureObjectCommandParameter i -> ExpenditureObjectParameter <| i |> Ok
+        | ActualCostCommandParameter i -> ActualCostParameter <| i |> Ok
+        | SpendDateCommandParameter i -> SpendDateParameter <| i |> Ok
+        | SpendingIdCommandParameter i -> SpendingIdParameter <| i |> Ok
         | _ -> Error (UndefinedParameter  (name, value))
     
     let parseParam (param: string): Result<CommandParameter, CommandError> =
@@ -71,10 +107,12 @@ module UICommandParameter =
             match filters with
             | param::tail ->
                 match param with
-                | CountParameter p -> l |> List.safeTake p.Count |> Ok |> filterShowSpending tail
+                | CountParameter p -> l |> List.safeTake p |> Ok |> filterShowSpending tail
+                | SpendDateParameter _
+                | ActualCostParameter _
+                | SpendingIdParameter _
                 | EstimatedCostParameter _
-                | ExpenditureObjectParameter _ ->
-                    param |> toParameterName |> ExpectedFilterParameter |> Error
+                | ExpenditureObjectParameter _ -> param |> toParameterName |> ExpectedFilterParameter |> Error
             | [] -> items
         | Error e -> Error e   
          

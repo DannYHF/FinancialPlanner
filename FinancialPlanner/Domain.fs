@@ -91,9 +91,17 @@ module Spending =
                  CreationDate = e.CreationDate
                  ExpenditureObject = e.ExpenditureObject
                  EstimatedCost = e.EstimatedCost }
-    
+
     let createExpected form =
         { Id = SpendingId (Guid.NewGuid ())
           CreationDate = DateTime.Now
           ExpenditureObject = form.ExpenditureObject
           EstimatedCost = form.EstimatedCost}
+    
+    let makeActual (actualCost, spendDate) (expectedSpending: ExpectedSpending) =
+        { Id = expectedSpending.Id
+          CreationDate = expectedSpending.CreationDate
+          ExpenditureObject = expectedSpending.ExpenditureObject
+          EstimatedCost = expectedSpending.EstimatedCost
+          ActualCost = actualCost
+          SpentDate = spendDate }
