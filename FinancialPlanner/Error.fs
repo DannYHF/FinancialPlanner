@@ -7,3 +7,6 @@ type CommandError =
     | NotSuitableParameter of commandName: string * parameterName: string
     | ExpectedFilterParameter of parameterName: string
     | MandatoryParametersAreNotFilled of requiredParameters: string list
+
+type DataLayerError =
+    | NotFound of string

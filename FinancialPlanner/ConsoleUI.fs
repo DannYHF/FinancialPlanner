@@ -40,7 +40,7 @@ let executeCommand command =
                 cmd.Form
                 |> createExpected
                 |> Expected
-                |> ctx.addSpending
+                |> ctx.add
         | MakeActualSpending cmd ->
             match (spendings |> List.tryFind (fun u -> cmd.ExpectedSpendingId = (u |> getId))) with
             | Some (Expected ex) -> ex

@@ -4,6 +4,10 @@ open System.Threading.Tasks
 open System.IO
 open FSharp.Json
 open FinancialPlanner.Domain
+open FinancialPlanner.Domain.Spending
+open FinancialPlanner.Error
+open FsToolkit.ErrorHandling
+open FsToolkit.ErrorHandling.Operator.Result
 
 
 
@@ -17,7 +21,7 @@ type JsonDataContext() =
         do! this.writeLines json filePath |> Async.AwaitTask 
     }
 
-    member this.addSpending(spending: Spending) = async {
+    member this.add(spending: Spending) = async {
         if not dataLoaded then
             let! _ = this.getSpendings()
             dataLoaded <- true
@@ -25,7 +29,19 @@ type JsonDataContext() =
         spendings <- spending :: spendings
     }
     
-    member this.getSpendings() = async {
+    member this.delete(spendingId: SpendingId): Async<Result<unit, DataLayerError>> = async {
+        if not dataLoaded then
+            let! _ = this.getSpendings()
+            dataLoaded <- true
+
+        let idxForRemove = spendings |> List.tryFindIndex (fun u -> u |> getId = spendingId)
+        return
+            match idxForRemove with
+            | Some idx -> (spendings <- spendings |> List.removeAt idx) |> Ok
+            | None -> "" |> NotFound |> Error
+    }
+    
+    member this.getSpendings(): Async<Spending list> = async {
         let! json = this.readLines filePath |> Async.AwaitTask
         let uploadModels = Json.deserialize<Spending list> json
         spendings <- uploadModels
