@@ -29,7 +29,7 @@ type JsonDataContext() =
         spendings <- spending :: spendings
     }
     
-    member this.delete(spendingId: SpendingId): Async<Result<unit, DataLayerError>> = async {
+    member this.delete(spendingId: SpendingId): Async<unit option> = async {
         if not dataLoaded then
             let! _ = this.getSpendings()
             dataLoaded <- true
@@ -37,8 +37,18 @@ type JsonDataContext() =
         let idxForRemove = spendings |> List.tryFindIndex (fun u -> u |> getId = spendingId)
         return
             match idxForRemove with
-            | Some idx -> (spendings <- spendings |> List.removeAt idx) |> Ok
-            | None -> "" |> NotFound |> Error
+            | Some idx -> (spendings <- spendings |> List.removeAt idx) |> Some
+            | None -> None
+    }
+    
+    member this.put(spending: Spending) = async {
+        if not dataLoaded then
+            let! _ = this.getSpendings()
+            dataLoaded <- true
+
+        let! _ = this.delete (spending |> getId)
+        
+        do! this.add spending
     }
     
     member this.getSpendings(): Async<Spending list> = async {

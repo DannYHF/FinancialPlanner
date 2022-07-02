@@ -1,26 +1,35 @@
 [
   {
+    "Actual": {
+      "Id": "422b2e8a-2c43-4435-b7a2-4f4f82a86591",
+      "CreationDate": "2022-05-29T17:57:44.3633553+03:00",
+      "ExpenditureObject": "Монитор",
+      "EstimatedCost": {
+        "Amount": 50000,
+        "Currency": {
+          "Code": "RUB",
+          "Name": "Рубль",
+          "PostFix": "₽"
+        }
+      },
+      "ActualCost": {
+        "Amount": 52000,
+        "Currency": {
+          "Code": "RUB",
+          "Name": "Рубль",
+          "PostFix": "₽"
+        }
+      },
+      "SpentDate": "2022-06-05T00:00:00.0000000+03:00"
+    }
+  },
+  {
     "Expected": {
       "Id": "156a7dc9-d035-4581-8240-d0762cc3ff09",
       "CreationDate": "2022-06-26T22:15:38.4841730+03:00",
       "ExpenditureObject": "Видеокарта",
       "EstimatedCost": {
         "Amount": 80000,
-        "Currency": {
-          "Code": "RUB",
-          "Name": "Рубль",
-          "PostFix": "₽"
-        }
-      }
-    }
-  },
-  {
-    "Expected": {
-      "Id": "422b2e8a-2c43-4435-b7a2-4f4f82a86591",
-      "CreationDate": "2022-05-29T17:57:44.3633553+03:00",
-      "ExpenditureObject": "Монитор",
-      "EstimatedCost": {
-        "Amount": 50000,
         "Currency": {
           "Code": "RUB",
           "Name": "Рубль",
