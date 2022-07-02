@@ -8,10 +8,8 @@ let spending: Spending = Expected {
     Id = SpendingId(Guid.NewGuid())
     CreationDate = DateTime.Now
     ExpenditureObject = "Монитор"
-    EstimatedCost = {
-        Amount = 50000m
-        Currency = Currency.Ruble
-    }
+    EstimatedCost = 50000m 
+    Currency = Currency.Ruble 
 }
 
 module Program =

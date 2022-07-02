@@ -5,9 +5,7 @@ open System.IO
 open FSharp.Json
 open FinancialPlanner.Domain
 open FinancialPlanner.Domain.Spending
-open FinancialPlanner.Error
 open FsToolkit.ErrorHandling
-open FsToolkit.ErrorHandling.Operator.Result
 
 
 

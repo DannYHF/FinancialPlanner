@@ -20,14 +20,16 @@ type MakeActualSpendingCommand =
 
 type Command =
     | ClearConsole
+    | GetShortStatistics
     | ShowSpendings of ShowSpendingsCommand
     | MakeActualSpending of MakeActualSpendingCommand
     | CreateExpectedSpending of CreateExpectedSpendingCommand
 
 let ShowSpendingsCommandName = "list"
 let ClearConsoleCommandName = "clear"
-let CreateExpectedSpendingName = "createExpected"
-let MakeActualSpendingName = "makeActual"
+let CreateExpectedSpendingCommandName = "createExpected"
+let MakeActualSpendingCommandName = "makeActual"
+let getShortStatisticsCommandName = "shortStats"
 
 let rec buildShowSpendingsCommandRec
     (command: Result<ShowSpendingsCommand, CommandError>)
@@ -84,9 +86,10 @@ let buildMakeActualSpendingCommand (parameters: CommandParameter list) =
 let toCommandName command =
     match command with
     | ClearConsole -> ClearConsoleCommandName
+    | GetShortStatistics -> getShortStatisticsCommandName
     | ShowSpendings _ -> ShowSpendingsCommandName
-    | CreateExpectedSpending _ -> CreateExpectedSpendingName
-    | MakeActualSpending _ -> MakeActualSpendingName
+    | CreateExpectedSpending _ -> CreateExpectedSpendingCommandName
+    | MakeActualSpending _ -> MakeActualSpendingCommandName
 
 let resolveCommand (input: string) : Result<Command, CommandError list> =
     if input |> String.IsNullOrEmpty then
@@ -108,14 +111,16 @@ let resolveCommand (input: string) : Result<Command, CommandError list> =
                 match (parameters |> buildShowSpendingsCommand) with
                 | Ok cmd -> ShowSpendings <| cmd |> Ok
                 | Error error -> [ error ] |> Error
-            | createEx when createEx = CreateExpectedSpendingName ->
+            | createEx when createEx = CreateExpectedSpendingCommandName ->
                 match (parameters |> buildCreateExpectedSpendingCommand) with
                 | Ok cmd -> CreateExpectedSpending <| cmd |> Ok
                 | Error error -> [ error ] |> Error
-            | makeActual when makeActual = MakeActualSpendingName ->
+            | makeActual when makeActual = MakeActualSpendingCommandName ->
                 match (parameters |> buildMakeActualSpendingCommand) with
                 | Ok cmd -> MakeActualSpending <| cmd |> Ok
-                | Error error -> [ error ] |> Error                
+                | Error error -> [ error ] |> Error
+            | getStats when getStats = getShortStatisticsCommandName ->
+                GetShortStatistics |> Ok
             | clear when clear = ClearConsoleCommandName -> ClearConsole |> Ok
             | _ -> Error [ UndefinedCommand $"Command name: %s{cmdName}" ]
         else

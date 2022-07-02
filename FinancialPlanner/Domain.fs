@@ -1,6 +1,8 @@
 namespace FinancialPlanner.Domain
 
 open System
+open FsToolkit.ErrorHandling
+open Microsoft.FSharp.Core
 
 type SpendingId = SpendingId of Guid
 
@@ -16,16 +18,18 @@ type ExpectedSpending =
       CreationDate: DateTime
 
       ExpenditureObject: string
-      EstimatedCost: Money }
+      EstimatedCost: decimal
+      Currency: Currency }
 
 type ActualSpending =
     { Id: SpendingId
       CreationDate: DateTime
 
       ExpenditureObject: string
-      EstimatedCost: Money
+      EstimatedCost: decimal
+      Currency: Currency
 
-      ActualCost: Money
+      ActualSpent: decimal
       SpentDate: DateTime }
 
 type Spending =
@@ -36,6 +40,12 @@ type CreateExpectedSpendingForm =
    { ExpenditureObject: string
      EstimatedCost: Money }
        
+type ShortSpendingsStatistics =
+    { TotalSpent: decimal
+      StillExpectedToSpend: decimal
+      DifferenceBetweenPlannedAndSpent: decimal
+      Currency: Currency}
+    
 module Currency =
     let Dollar: Currency =
         { Code = "USD"
@@ -70,6 +80,11 @@ module Money =
             None
 
 module Spending =
+    let getCurrency spending =
+        match spending with
+        | Actual a -> a.Currency
+        | Expected e -> e.Currency
+        
     let getId spending =
         match spending with
         | Actual a -> a.Id
@@ -83,25 +98,46 @@ module Spending =
                  CreationDate = a.CreationDate
                  ExpenditureObject = a.ExpenditureObject
                  EstimatedCost = a.EstimatedCost
-                 ActualCost = a.ActualCost
-                 SpentDate = a.SpentDate }
+                 ActualSpent = a.ActualSpent
+                 SpentDate = a.SpentDate
+                 Currency = a.Currency }
         | Expected e ->
             Expected
             <| { Id = id
                  CreationDate = e.CreationDate
                  ExpenditureObject = e.ExpenditureObject
-                 EstimatedCost = e.EstimatedCost }
+                 EstimatedCost = e.EstimatedCost
+                 Currency = e.Currency }
 
     let createExpected form =
         { Id = SpendingId (Guid.NewGuid ())
           CreationDate = DateTime.Now
           ExpenditureObject = form.ExpenditureObject
-          EstimatedCost = form.EstimatedCost}
+          EstimatedCost = form.EstimatedCost.Amount
+          Currency = form.EstimatedCost.Currency }
     
-    let makeActual (actualCost, spendDate) (expectedSpending: ExpectedSpending) =
+    let makeActual (actualSpent, spendDate) (expectedSpending: ExpectedSpending) =
         { Id = expectedSpending.Id
           CreationDate = expectedSpending.CreationDate
           ExpenditureObject = expectedSpending.ExpenditureObject
           EstimatedCost = expectedSpending.EstimatedCost
-          ActualCost = actualCost
-          SpentDate = spendDate }
+          ActualSpent = actualSpent
+          SpentDate = spendDate
+          Currency = expectedSpending.Currency }
+    
+    let prepareShortStatistics spendings =
+        let groupedByCurrency = spendings |> List.groupBy (fun u -> u |> getCurrency)
+        groupedByCurrency |> List.map (fun (currency, spendings) ->
+            { TotalSpent = (Decimal.Zero, spendings) ||> List.fold (fun acc s ->
+                match s with
+                | Actual a -> acc + a.ActualSpent
+                | Expected _ -> acc)
+              StillExpectedToSpend = (Decimal.Zero, spendings) ||> List.fold (fun acc s ->
+                match s with
+                | Expected e -> e.EstimatedCost + acc
+                | Actual _ -> acc) 
+              DifferenceBetweenPlannedAndSpent = (Decimal.Zero, spendings) ||> List.fold (fun acc s ->
+                match s with
+                | Actual a -> acc + a.EstimatedCost - a.ActualSpent
+                | Expected _ -> acc)
+              Currency = currency })
