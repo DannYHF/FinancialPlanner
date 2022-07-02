@@ -31,26 +31,25 @@ let CreateExpectedSpendingCommandName = "createExpected"
 let MakeActualSpendingCommandName = "makeActual"
 let getShortStatisticsCommandName = "shortStats"
 
-let rec buildShowSpendingsCommandRec
-    (command: Result<ShowSpendingsCommand, CommandError>)
-    (parameters: CommandParameter list)
-    : Result<ShowSpendingsCommand, CommandError> =
-    match parameters with
-    | param :: tail ->
-        match command with
-        | Ok cmd ->
-            match param with
-            | CountParameter p ->
-                 tail |> buildShowSpendingsCommandRec ({ cmd with FilterParameters = (CountParameter <| p) :: cmd.FilterParameters } |> Ok)
-            | SpendingIdParameter _
-            | ActualCostParameter _
-            | SpendDateParameter _
-            | EstimatedCostParameter _
-            | ExpenditureObjectParameter _ -> (ShowSpendingsCommandName, param |> toParameterName) |> NotSuitableParameter |> Error
-        | Error error -> error |> Error
-    | [] -> command
-
 let buildShowSpendingsCommand =
+    let rec buildShowSpendingsCommandRec
+        (command: Result<ShowSpendingsCommand, CommandError>)
+        (parameters: CommandParameter list)
+        : Result<ShowSpendingsCommand, CommandError> =
+        match parameters with
+        | param :: tail ->
+            match command with
+            | Ok cmd ->
+                match param with
+                | CountParameter p ->
+                     tail |> buildShowSpendingsCommandRec ({ cmd with FilterParameters = (CountParameter <| p) :: cmd.FilterParameters } |> Ok)
+                | SpendingIdParameter _
+                | ActualCostParameter _
+                | SpendDateParameter _
+                | EstimatedCostParameter _
+                | ExpenditureObjectParameter _ -> (ShowSpendingsCommandName, param |> toParameterName) |> NotSuitableParameter |> Error
+            | Error error -> error |> Error
+        | [] -> command
     buildShowSpendingsCommandRec (Ok { FilterParameters = [] })
 
 let buildCreateExpectedSpendingCommand (parameters: CommandParameter list) =
