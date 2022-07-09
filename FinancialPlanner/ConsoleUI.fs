@@ -51,14 +51,20 @@ let executeCommand command =
                 |> ctx.add
         | MakeActualSpending cmd ->
             match (spendings |> List.tryFind (fun u -> cmd.ExpectedSpendingId = (u |> getId)), cmd.ActualCost.Currency) with
-            | Some (Expected ex), c when c = ex.Currency -> do! ex
-                                                                |> makeActual (cmd.ActualCost.Amount, cmd.SpendDate)
-                                                                |> Actual
-                                                                |> ctx.put
+            | Some (Expected ex), c when c = ex.Currency ->
+                do! ex
+                    |> makeActual (cmd.ActualCost.Amount, cmd.SpendDate)
+                    |> Actual
+                    |> ctx.put
             | Some (Expected ex), c when not (c = ex.Currency) -> printfn $"Currency doesn't match. Must be %s{c.Code}"                                                   
             | Some (Actual _), _ -> printfn "Spending must be expected, but was actual"
             | None, _ -> printfn $"Spending with guid %A{cmd.ExpectedSpendingId}"
             | _ -> failwith "todo"
+        | DeleteSpending cmd ->
+            let! deleting = cmd.SpendingId |> ctx.delete
+            match deleting with
+            | Some _ -> printfn "Deleted"
+            | None -> printfn $"Can't find spending with id %s{string <| cmd.SpendingId}"
         | GetShortStatistics -> printfn $"%s{spendings |> prepareShortStatistics |> shortStatisticsPresentation}"
         | ClearConsole -> Console.Clear ()
 
