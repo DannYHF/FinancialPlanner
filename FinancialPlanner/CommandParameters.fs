@@ -14,7 +14,7 @@ type CommandParameter =
     | SpendDateParameter of SpendDate: DateTime
     | SpendingIdParameter of SpendingId: SpendingId
 
-module UICommandParameter =
+module CommandParameter =
     let CountParameterName = "count"
     let EstimatedCostParameterName = "estimatedCost"
     let ExpenditureObjectParameterName = "expenditureObject"

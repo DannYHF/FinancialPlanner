@@ -7,9 +7,8 @@ open Microsoft.FSharp.Core
 type SpendingId = SpendingId of Guid
 
 type Currency =
-    { Code: string
-      Name: string
-      PostFix: char}
+    | Ruble
+    | Dollar
 
 type Money = { Amount: decimal; Currency: Currency }
 
@@ -35,47 +34,50 @@ type ActualSpending =
 type Spending =
     | Actual of ActualSpending
     | Expected of ExpectedSpending
-    
+
 type CreateExpectedSpendingForm =
-   { ExpenditureObject: string
-     EstimatedCost: Money }
-       
+    { ExpenditureObject: string
+      EstimatedCost: Money }
+
 type ShortSpendingsStatistics =
     { TotalSpent: decimal
       StillExpectedToSpend: decimal
       DifferenceBetweenPlannedAndSpent: decimal
-      Currency: Currency}
-    
+      Currency: Currency }
+
 module Currency =
-    let Dollar: Currency =
-        { Code = "USD"
-          Name = "Доллар"
-          PostFix = '$' }
-    
-    let DollarSupportedPostFixes = [ '$'; 'д'; 'd' ]     
+    let dollarSupportedPostFixes = [ '$'; 'д'; 'd' ]
+    let rubleSupportedPostFixes = [ '₽'; 'р'; 'r' ]
 
-    let Ruble: Currency =
-        { Code = "RUB"
-          Name = "Рубль"
-          PostFix = '₽' }
-    
-    let RubleSupportedPostFixes = [ '₽'; 'р'; 'r' ]    
+    let determineByPostfix postfix =
+        match postfix with
+        | ruble when rubleSupportedPostFixes |> List.contains ruble -> Ruble |> Some
+        | dollar when dollarSupportedPostFixes |> List.contains dollar -> Dollar |> Some
+        | _ -> None
 
-[<RequireQualifiedAccess>]        
+    let getPostfix (currency: Currency) =
+        match currency with
+        | Ruble -> "₽"
+        | Dollar -> "$"
+
+    let getCode currency =
+        match currency with
+        | Ruble -> "RUB"
+        | Dollar -> "USD"
+
+[<RequireQualifiedAccess>]
 module Money =
-    let tryParse (money:string) =
+    open Currency
+
+    let tryParse (money: string) =
         let mutable value = Decimal.Zero
-        let postFix = money.[money.Length - 1]
-        let strValue = money.Substring (0, money.Length - 1)
-        if Decimal.TryParse (strValue, &value) then
-            match postFix with
-            | p when Currency.DollarSupportedPostFixes |> List.contains p ->
-                    { Amount = value
-                      Currency = Currency.Dollar } |> Some
-            | p when Currency.RubleSupportedPostFixes |> List.contains p ->
-                    { Amount = value
-                      Currency = Currency.Ruble } |> Some                    
-            | _ -> None
+        let postfix = money.[money.Length - 1]
+        let strValue = money.Substring(0, money.Length - 1)
+
+        if Decimal.TryParse(strValue, &value) then
+            match (postfix |> determineByPostfix) with
+            | Some currency -> { Amount = value; Currency = currency } |> Some
+            | None -> None
         else
             None
 
@@ -84,16 +86,16 @@ module Spending =
         match spending with
         | Actual a -> a.Currency
         | Expected e -> e.Currency
-        
+
     let getId spending =
         match spending with
         | Actual a -> a.Id
         | Expected e -> e.Id
 
-    let setId id spending: Spending =
+    let setId id spending : Spending =
         match spending with
         | Actual a ->
-          Actual
+            Actual
             <| { Id = id
                  CreationDate = a.CreationDate
                  ExpenditureObject = a.ExpenditureObject
@@ -110,12 +112,12 @@ module Spending =
                  Currency = e.Currency }
 
     let createExpected form =
-        { Id = SpendingId (Guid.NewGuid ())
+        { Id = SpendingId(Guid.NewGuid())
           CreationDate = DateTime.Now
           ExpenditureObject = form.ExpenditureObject
           EstimatedCost = form.EstimatedCost.Amount
           Currency = form.EstimatedCost.Currency }
-    
+
     let makeActual (actualSpent, spendDate) (expectedSpending: ExpectedSpending) =
         { Id = expectedSpending.Id
           CreationDate = expectedSpending.CreationDate
@@ -124,20 +126,31 @@ module Spending =
           ActualSpent = actualSpent
           SpentDate = spendDate
           Currency = expectedSpending.Currency }
-    
+
     let prepareShortStatistics spendings =
-        let groupedByCurrency = spendings |> List.groupBy (fun u -> u |> getCurrency)
-        groupedByCurrency |> List.map (fun (currency, spendings) ->
-            { TotalSpent = (Decimal.Zero, spendings) ||> List.fold (fun acc s ->
-                match s with
-                | Actual a -> acc + a.ActualSpent
-                | Expected _ -> acc)
-              StillExpectedToSpend = (Decimal.Zero, spendings) ||> List.fold (fun acc s ->
-                match s with
-                | Expected e -> e.EstimatedCost + acc
-                | Actual _ -> acc) 
-              DifferenceBetweenPlannedAndSpent = (Decimal.Zero, spendings) ||> List.fold (fun acc s ->
-                match s with
-                | Actual a -> acc + a.EstimatedCost - a.ActualSpent
-                | Expected _ -> acc)
-              Currency = currency })
+        spendings
+        |> List.groupBy (fun u -> u |> getCurrency)
+        |> List.map
+            (fun (currency, spendings) ->
+                { TotalSpent =
+                      (Decimal.Zero, spendings)
+                      ||> List.fold
+                              (fun acc s ->
+                                  match s with
+                                  | Actual a -> acc + a.ActualSpent
+                                  | Expected _ -> acc)
+                  StillExpectedToSpend =
+                      (Decimal.Zero, spendings)
+                      ||> List.fold
+                              (fun acc s ->
+                                  match s with
+                                  | Expected e -> e.EstimatedCost + acc
+                                  | Actual _ -> acc)
+                  DifferenceBetweenPlannedAndSpent =
+                      (Decimal.Zero, spendings)
+                      ||> List.fold
+                              (fun acc s ->
+                                  match s with
+                                  | Actual a -> acc + a.EstimatedCost - a.ActualSpent
+                                  | Expected _ -> acc)
+                  Currency = currency })

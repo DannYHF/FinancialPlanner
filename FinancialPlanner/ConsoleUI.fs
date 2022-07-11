@@ -5,8 +5,8 @@ open System.Text
 open FinancialPlanner.Domain
 open FinancialPlanner.Domain.Spending
 open FinancialPlanner.Data
-open FinancialPlanner.UICommandParameter
-open FinancialPlanner.UICommands
+open FinancialPlanner.CommandParameter
+open FinancialPlanner.Domain.Currency
 
 let spendingPresentation spending =
     match spending with
@@ -14,21 +14,21 @@ let spendingPresentation spending =
         $"  Id: %A{a.Id}\n"
         + $"  Creation date: {a.CreationDate:``dd-MM-yyyy``}\n"
         + $"  Expenditure object: %s{a.ExpenditureObject}\n"
-        + $"  Estimated amount of money {a.EstimatedCost:N2} %c{a.Currency.PostFix}\n"
+        + $"  Estimated amount of money {a.EstimatedCost:N2} %s{a.Currency |> getPostfix}\n"
         + $"  Spent date: {a.SpentDate:``dd-MM-yyyy``}\n"
-        + $"  Actual money spent: {a.ActualSpent:N2} %c{a.Currency.PostFix}"
+        + $"  Actual money spent: {a.ActualSpent:N2} %s{a.Currency |> getPostfix}"
     | Expected e ->
         $"  Id: %A{e.Id}\n"
         + $"  Creation date: {e.CreationDate:``dd-MM-yyyy``}\n"
         + $"  Expenditure object: %s{e.ExpenditureObject}\n"
-        + $"  Estimated amount of money {e.EstimatedCost:N2} %c{e.Currency.PostFix}"
+        + $"  Estimated amount of money {e.EstimatedCost:N2} %s{e.Currency |> getPostfix}"
 
 let shortStatisticsPresentation statistics =
     let builder = StringBuilder ()
-    statistics |> List.iter (fun u -> builder.Append ($"%s{u.Currency.Code}:\n" +
+    statistics |> List.iter (fun u -> builder.Append ($"%s{u.Currency |> getCode}:\n" +
                                                       $"   Total spent {u.TotalSpent:N2}\n" +
                                                       $"   Still expected to spend {u.StillExpectedToSpend:N2}\n" +
-                                                      $"   Difference between planned and spent {u.DifferenceBetweenPlannedAndSpent:N2}\n \n ") |> ignore)
+                                                      $"   Difference between planned and spent {u.DifferenceBetweenPlannedAndSpent:N2}\n \n") |> ignore)
     builder.ToString ()
     
 let executeCommand command =
@@ -56,7 +56,7 @@ let executeCommand command =
                     |> makeActual (cmd.ActualCost.Amount, cmd.SpendDate)
                     |> Actual
                     |> ctx.put
-            | Some (Expected ex), c when not (c = ex.Currency) -> printfn $"Currency doesn't match. Must be %s{c.Code}"                                                   
+            | Some (Expected ex), c when not (c = ex.Currency) -> printfn $"Currency doesn't match. Must be %s{c |> getCode}"                                                   
             | Some (Actual _), _ -> printfn "Spending must be expected, but was actual"
             | None, _ -> printfn $"Spending with guid %A{cmd.ExpectedSpendingId}"
             | _ -> failwith "todo"

@@ -12,8 +12,8 @@
         <Compile Include="Error.fs" />
         <Compile Include="Data.fs" />
         <Compile Include="Utils.fs" />
-        <Compile Include="UICommandParameters.fs" />
-        <Compile Include="UICommands.fs" />
+        <Compile Include="CommandParameters.fs" />
+        <Compile Include="Commands.fs" />
         <Compile Include="ConsoleUI.fs" />
         <Compile Include="Program.fs" />
     </ItemGroup>
