@@ -13,6 +13,7 @@
         <Compile Include="Data.fs" />
         <Compile Include="Utils.fs" />
         <Compile Include="CommandParameters.fs" />
+        <Compile Include="Tokenizer.fs" />
         <Compile Include="Commands.fs" />
         <Compile Include="ConsoleUI.fs" />
         <Compile Include="Program.fs" />
@@ -26,6 +27,7 @@
 
     <ItemGroup>
       <Content Include="Data\Spendings.json" CopyToOutputDirectory="Always" />
+      <None Include="Testing.fsx" />
     </ItemGroup>
 
 </Project>

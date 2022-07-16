@@ -7,6 +7,7 @@ open FinancialPlanner.Domain
 open FinancialPlanner.Error
 open FinancialPlanner.Utils
 open FinancialPlanner.CommandParameter
+open FinancialPlanner.Tokenizer
 
 type ShowSpendingsCommand =
     { FilterParameters: CommandParameter list }
@@ -184,12 +185,7 @@ module Commands =
             [ ParsingFailed "Looks like as though input empty O_o" ]
             |> Error
         else
-            let words =
-                input.Split " "
-                |> Array.toList
-                |> List.where
-                   ^ fun u -> u |> String.IsNullOrEmpty |> not
-    
+            let words = input |> tokenize
             let parsedParameters = words |> List.skip 1 |> parseParams
             let cmdName = (words |> List.take 1).Head
             let errors = parsedParameters |> Result.getErrors
