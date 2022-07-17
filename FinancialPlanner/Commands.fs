@@ -8,6 +8,7 @@ open FinancialPlanner.Error
 open FinancialPlanner.Utils
 open FinancialPlanner.CommandParameter
 open FinancialPlanner.Tokenizer
+open FsToolkit.ErrorHandling
 
 type ShowSpendingsCommand =
     { FilterParameters: CommandParameter list }
@@ -39,9 +40,9 @@ module Commands =
     
     let buildShowSpendingsCommand =
         let rec buildShowSpendingsCommandRec
-            (command: Result<ShowSpendingsCommand, CommandError>)
+            (command: Result<ShowSpendingsCommand, Error>)
             (parameters: CommandParameter list)
-            : Result<ShowSpendingsCommand, CommandError> =
+            : Result<ShowSpendingsCommand, Error> =
             match parameters with
             | param :: tail ->
                 match command with
@@ -180,37 +181,52 @@ module Commands =
         | MakeActualSpending _ -> makeActualSpendingCommandName
         | DeleteSpending _ -> deleteSpendingCommandName
     
-    let resolveCommand (input: string) : Result<Command, CommandError list> =
-        if input |> String.IsNullOrEmpty then
-            [ ParsingFailed "Looks like as though input empty O_o" ]
-            |> Error
-        else
-            let words = input |> tokenize
-            let parsedParameters = words |> List.skip 1 |> parseParams
-            let cmdName = (words |> List.take 1).Head
-            let errors = parsedParameters |> Result.getErrors
-            let parameters = parsedParameters |> Result.getResults
+    let rec mapShowSpendings (result: Result<ShowSpendingsCommand, Error>) : Result<Command, Error> =
+        match result with
+        | Ok r -> ShowSpendings <| r |> Ok
+        | Error e -> e |> Error
+    let rec mapMakeActualSpending (result: Result<MakeActualSpendingCommand, Error>) : Result<Command, Error> =
+        match result with
+        | Ok r -> MakeActualSpending <| r |> Ok
+        | Error e -> e |> Error
+    let rec mapCreateExpectedSpending (result: Result<CreateExpectedSpendingCommand, Error>) : Result<Command, Error> =
+        match result with
+        | Ok r -> CreateExpectedSpending <| r |> Ok
+        | Error e -> e |> Error
+    let rec mapDeleteSpending (result: Result<DeleteSpendingCommand, Error>) : Result<Command, Error> =
+        match result with
+        | Ok r -> DeleteSpending <| r |> Ok
+        | Error e -> e |> Error
     
-            if errors.IsEmpty then
-                match cmdName with
-                | show when show = showSpendingsCommandName ->
-                    match (parameters |> buildShowSpendingsCommand) with
-                    | Ok cmd -> ShowSpendings <| cmd |> Ok
-                    | Error error -> [ error ] |> Error
-                | createEx when createEx = createExpectedSpendingCommandName ->
-                    match (parameters |> buildCreateExpectedSpendingCommand) with
-                    | Ok cmd -> CreateExpectedSpending <| cmd |> Ok
-                    | Error error -> [ error ] |> Error
-                | makeActual when makeActual = makeActualSpendingCommandName ->
-                    match (parameters |> buildMakeActualSpendingCommand) with
-                    | Ok cmd -> MakeActualSpending <| cmd |> Ok
-                    | Error error -> [ error ] |> Error
-                | getStats when getStats = getShortStatisticsCommandName -> GetShortStatistics |> Ok
-                | delete when delete = deleteSpendingCommandName ->
-                    match (parameters |> buildDeleteSpendingCommand) with
-                    | Ok cmd -> DeleteSpending <| cmd |> Ok
-                    | Error e -> [ e ] |> Error
-                | clear when clear = clearConsoleCommandName -> ClearConsole |> Ok
-                | _ -> Error [ UndefinedCommand $"Command name: %s{cmdName}" ]
-            else
-                errors |> Error
+    let validateUserInput input =
+        if input |> String.IsNullOrEmpty then
+            "Looks like as though input empty O_o" |> ParsingFailed |> Error
+        else
+            input |> Ok
+        
+    let resolveCommand (input: string) : Result<Command, Error> =
+        result {
+            let! validated = input |> validateUserInput
+            let! tokens = validated |> tokenize
+            let! parameters = tokens |> List.skip 1 |> parseParams
+            let cmdToken = (tokens |> List.take 1).Head
+            
+            match cmdToken.Source with
+            | show when show = showSpendingsCommandName ->
+                return! parameters |> buildShowSpendingsCommand |> mapShowSpendings
+                
+            | createEx when createEx = createExpectedSpendingCommandName ->
+                return! parameters |> buildCreateExpectedSpendingCommand |> mapCreateExpectedSpending
+                
+            | makeActual when makeActual = makeActualSpendingCommandName ->
+                return! parameters |> buildMakeActualSpendingCommand |> mapMakeActualSpending
+                
+            | delete when delete = deleteSpendingCommandName ->
+                return! parameters |> buildDeleteSpendingCommand |> mapDeleteSpending
+                
+            | getStats when getStats = getShortStatisticsCommandName -> return! GetShortStatistics |> Ok
+            
+            | clear when clear = clearConsoleCommandName -> return! ClearConsole |> Ok
+            
+            | _ -> return! $"Command name: %s{cmdToken.Source}" |> UndefinedCommand |>  Error 
+        }

@@ -5,6 +5,7 @@ open FinancialPlanner
 open FinancialPlanner.Domain
 open FinancialPlanner.Error
 open FinancialPlanner.Utils
+open Microsoft.FSharp.Core
 
 type CommandParameter =
     | CountParameter of Count: int
@@ -81,7 +82,7 @@ module CommandParameter =
             Some value
         else None    
             
-    let buildParam name value: Result<CommandParameter, CommandError> =
+    let buildParam name value: Result<CommandParameter, Error> =
         match (name, value) with
         | CountCommandParameter i -> CountParameter <| i |> Ok
         | EstimatedCostCommandParameter i -> EstimatedCostParameter <| i |> Ok
@@ -90,17 +91,7 @@ module CommandParameter =
         | SpendDateCommandParameter i -> SpendDateParameter <| i |> Ok
         | SpendingIdCommandParameter i -> SpendingIdParameter <| i |> Ok
         | _ -> Error (UndefinedParameter  (name, value))
-    
-    let parseParam (param: string): Result<CommandParameter, CommandError> =
-        if(param.IndexOf("-") = 0 || param.Length < 4) then
-            let nameAndVal = param.Substring(1, param.Length - 1).Split ':'
-            if nameAndVal.Length = 2 then
-                buildParam nameAndVal[0] nameAndVal[1]
-            else
-                Error (ParsingFailed "Invalid parameter syntax. Should look like: -[ParameterName]:[ParameterValue]")
-        else
-            Error (ParsingFailed "Invalid parameter syntax. Should look like: -[ParameterName]:[ParameterValue]")
-    
+     
     let rec filterShowSpending filters items  =
         match items with
         | Ok l ->
@@ -116,5 +107,4 @@ module CommandParameter =
             | [] -> items
         | Error e -> Error e   
          
-    let parseParams (parameters: string list) =
-        parameters |> List.map parseParam
+    let parseParams (parameters: Token list): Result<CommandParameter list, Error> = failwith "todo" //TODO: impl

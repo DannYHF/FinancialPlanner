@@ -2,51 +2,64 @@ namespace FinancialPlanner
 
 open System.Text
 open System.Text.RegularExpressions
+open FinancialPlanner.Error
 
 type TokenizerState =
     | End
     | String
 
-type Token =
+type TokenType =
     | Space           // ' '
     | DoubleDot       // ':'
     | Dash            // '-'
     | EnglishLetter   // ^[a-zA-z]$
     | Quote           // '"'
-    
+
+type Token =
+    { Source: string
+      Position: int
+      Type: TokenType }
 
 module Tokenizer =
-    let (|SpaceToken|_|) symbol = if symbol = ' ' then Some () else None
-    let (|DoubleDotToken|_|) symbol = if symbol = ':' then Some () else None           
-    let (|DashToken|_|) symbol = if symbol = '-' then Some () else None
-    let (|QuoteToken|_|) symbol = if symbol = '"' then Some () else None
+    let (|SpaceToken|_|) symbol = if symbol = ' ' then Some Space else None
+    let (|DoubleDotToken|_|) symbol = if symbol = ':' then Some DoubleDot else None           
+    let (|DashToken|_|) symbol = if symbol = '-' then Some Dash else None
+    let (|QuoteToken|_|) symbol = if symbol = '"' then Some Quote else None
     let (|EnglishLetterToken|_|) (symbol: char) =
-        if (Regex.Match (string <| symbol, "^[a-zA-z]$")).Success then Some () else None 
+        if (Regex.Match (string <| symbol, "^[a-zA-z]$")).Success then Some EnglishLetter else None 
             
-    let tokenize (input: string): string list =
+    let tokenize (input: string) =
         let builder = StringBuilder()
         let rec loop idx state tokens =
             if idx < input.Length then
-                match state, input[idx] with
-                | String, QuoteToken ->
-                    let str = builder.ToString()
+                let curr = input[idx]
+                match state, curr with
+                | String, QuoteToken t ->
+                    let token = { Source = builder.ToString()
+                                  Position = idx
+                                  Type = t } 
                     builder.Clear () |> ignore
-                    loop (idx + 1) TokenizerState.End (str :: tokens)
-                | String, curr ->
-                    builder.Append curr |> ignore
+                    loop (idx + 1) TokenizerState.End (token :: tokens)
+                | String, c ->
+                    builder.Append c |> ignore
                     loop (idx + 1) TokenizerState.String tokens
-                | End, QuoteToken -> loop (idx + 1) TokenizerState.String tokens
-                | End, SpaceToken ->
+                | End, QuoteToken _ -> loop (idx + 1) TokenizerState.String tokens
+                | End, SpaceToken t ->
                     if builder.Length <> 0 then
-                        let str = builder.ToString()
+                        let token = { Source = builder.ToString()
+                                      Position = idx
+                                      Type = t }
                         builder.Clear () |> ignore
-                        loop (idx + 1) TokenizerState.End (str :: tokens)
+                        loop (idx + 1) TokenizerState.End (token :: tokens)
                     else
                         loop (idx + 1) TokenizerState.End tokens
-                | End, curr ->
+                | End, EnglishLetterToken _
+                | End, DashToken _
+                | End, DoubleDotToken _ ->
                     builder.Append curr |> ignore
                     loop (idx + 1) TokenizerState.End tokens
+                | End, _ -> (idx, curr) |> UndefinedSymbol |> Error   
             else
-                tokens
+                tokens |> Ok
                 
         loop 0 TokenizerState.End []   
