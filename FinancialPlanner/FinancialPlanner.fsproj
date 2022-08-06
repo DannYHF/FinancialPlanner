@@ -27,7 +27,6 @@
 
     <ItemGroup>
       <Content Include="Data\Spendings.json" CopyToOutputDirectory="Always" />
-      <None Include="Testing.fsx" />
     </ItemGroup>
 
 </Project>
