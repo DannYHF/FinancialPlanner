@@ -6,5 +6,5 @@ open FinancialPlanner.Tokenizer
 
 [<Fact>]
 let ``My test`` () =
-    let res = "someword 12341 : -  \"hello word!" |> tokenize
+    let tokenizeRes = "createExpected -estimatedCost:40000r -expenditureObject:\"Кресло ортопедическое\"" |> tokenize
     Assert.True(true)

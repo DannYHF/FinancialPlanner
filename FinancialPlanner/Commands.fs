@@ -209,7 +209,7 @@ module Commands =
             let! validated = input |> validateUserInput
             let! tokens = validated |> tokenize
             let! parameters = tokens |> List.skip 1 |> parseParams
-            let cmdToken = (tokens |> List.take 1).Head
+            let cmdToken = tokens.Head
             
             match cmdToken.Source with
             | show when show = showSpendingsCommandName ->

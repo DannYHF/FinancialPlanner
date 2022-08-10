@@ -71,7 +71,7 @@ module Tokenizer =
                 | _ -> builder.Append(sym) |> ignore
                        loop (idx + 1) 
             else
-                (idx, "Expected '\"' in end of the string.") |> UnfinishedConstruction |> Error 
+                (Some idx, "Expected '\"' in end of the string.") |> UnfinishedConstruction |> Error 
         loop position          
        
     let rec tokenize (input: string): Result<Token list, Error> =
