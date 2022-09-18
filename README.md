@@ -1,12 +1,12 @@
 # Financial planner
 
 ### Commands
-- list - list of spendings
-- clear - clear console 
-- createExpected - create expected spending
-- makeActual - make actual expected spendings
+- list - list of spendings, parameters: [count optional]
+- clear - clear console
+- createExpected - create expected spending, parameters: [estimatedCost **required**, expenditureObject **required**]
+- makeActual - make actual expected spendings, parameters: [spendDate **required**, spendingId **required**, actualCost **required**]
 - shortStats - short statistics about spendings
-- delete - delete spendings
+- delete - delete spendings, parameters: [spendingId **required**]
 
 ### Parameters
 - count - example -count:5
