@@ -16,4 +16,4 @@
 - spendDate
 - spendingId
 
-Example: createExpected -estimatedCost:40000r -expenditureObject:"Кресло ортопедическое"
+Example: createExpected -estimatedCost:"40000r" -expenditureObject:"Кресло ортопедическое"
